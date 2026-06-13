@@ -203,3 +203,43 @@ git push origin v0.1.0
 Pushing a `v*` tag triggers `.github/workflows/release.yml`, which will build distribution archives and create a GitHub Release. To publish to PyPI, set the secret `PYPI_API_TOKEN` in the repository settings.
 
 If you want me to create a branch and open a PR for these changes, provide the repository remote URL and grant push access (or push the branch yourself). I cannot push or create a PR without remote permissions.
+
+## Docker on Windows
+
+If you prefer to run Saffin in Docker on Windows, a small helper script is provided at `scripts/docker_run.ps1`.
+
+Quick steps (PowerShell, from repo root):
+
+```powershell
+# build and start containers (uses docker compose)
+.\scripts\docker_run.ps1
+
+# to run detached
+.\scripts\docker_run.ps1 -Detach
+
+# to rebuild from scratch
+.\scripts\docker_run.ps1 -Rebuild
+```
+
+The script checks for `docker` on PATH and prefers the built-in `docker compose` command. It runs `docker compose up --build` by default.
+
+## Desktop shortcut & scheduled reminders (Windows)
+
+Two helper scripts make daily reminders and a desktop launcher easy:
+
+- `scripts/create_desktop_shortcut.ps1` — creates a `.lnk` on your desktop that launches the CLI assistant.
+- `scripts/schedule_reminder.ps1` — registers a Windows Scheduled Task that runs `scripts/send_reminder.ps1` at a given time each day.
+
+Usage examples (PowerShell):
+
+```powershell
+# create a desktop shortcut named "Saffin Assistant"
+.\scripts\create_desktop_shortcut.ps1 -Name "Saffin Assistant"
+
+# schedule a daily reminder at 09:00 with a custom message
+.\scripts\schedule_reminder.ps1 -TaskName SaffinMorning -Time 09:00 -Message "Log your session for today"
+
+# the scheduled task runs scripts/send_reminder.ps1; edit that file to change behavior (toast vs message box)
+```
+
+These helpers are intentionally lightweight and avoid requiring admin rights; `schtasks` is used to register per-user scheduled tasks.
