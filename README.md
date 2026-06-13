@@ -243,3 +243,25 @@ Usage examples (PowerShell):
 ```
 
 These helpers are intentionally lightweight and avoid requiring admin rights; `schtasks` is used to register per-user scheduled tasks.
+
+## Uninstalling shortcuts and scheduled tasks (Windows)
+
+If you created a desktop shortcut or a scheduled reminder, you can remove them easily.
+
+PowerShell (from repo root):
+
+```powershell
+# remove the desktop shortcut
+.\	emplates\scripts\uninstall_shortcuts.ps1 -RemoveDesktop -Name "Saffin Assistant"
+
+# remove the Start Menu shortcut and the scheduled task
+.\scripts\uninstall_shortcuts.ps1 -RemoveStartMenu -RemoveTask -TaskName SaffinMorning -Name "Saffin Assistant"
+```
+
+Alternatively, use the GUI installer script to uninstall items interactively:
+
+```powershell
+.\scripts\installer_windows.ps1 -Uninstall
+```
+
+Note: the uninstall scripts operate on per-user shortcuts and scheduled tasks and don't require admin privileges.
