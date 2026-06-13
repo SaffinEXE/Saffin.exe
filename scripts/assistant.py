@@ -47,7 +47,12 @@ CONFIG = Config()
 # ============================================================================
 
 
-def call_ollama(messages: List[Dict[str, str]], stream: Optional[bool] = None, model: Optional[str] = None, host: Optional[str] = None) -> str:
+def call_ollama(
+    messages: List[Dict[str, str]],
+    stream: Optional[bool] = None,
+    model: Optional[str] = None,
+    host: Optional[str] = None,
+) -> str:
     """
     Call the local Ollama API.
     If stream is True, print tokens as they arrive and return the full response.
@@ -127,7 +132,10 @@ def check_setup() -> bool:
         print(f"⚠️ Model '{MODEL}' not found on Ollama. Run: ollama pull {MODEL}")
         return False
     except Exception:
-        print("⚠️ Ollama is not reachable. Install and run Ollama (https://ollama.com/download) and then `ollama serve`.")
+        print(
+            "⚠️ Ollama is not reachable. Install and run Ollama "
+            "(https://ollama.com/download) and then `ollama serve`."
+        )
         return False
 
 
@@ -159,7 +167,10 @@ def log_session(primary_minutes: int, secondary_minutes: int, notes: str) -> str
         ]
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
         if result.returncode == 0:
-            return f"✅ Logged {primary_minutes}min primary + {secondary_minutes}min secondary.\nNotes: {notes}"
+            return (
+                f"✅ Logged {primary_minutes}min primary + "
+                f"{secondary_minutes}min secondary.\nNotes: {notes}"
+            )
         else:
             return f"⚠️ Logging failed: {result.stderr}"
     except Exception as e:
@@ -171,7 +182,11 @@ def get_week_progress() -> str:
     try:
         cmd = [sys.executable, str(SCRIPTS_DIR / "saffin.py"), "status"]
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
-        return result.stdout if result.returncode == 0 else f"⚠️ Status check failed: {result.stderr}"
+        return (
+            result.stdout
+            if result.returncode == 0
+            else f"⚠️ Status check failed: {result.stderr}"
+        )
     except Exception as e:
         return f"❌ Error: {e}"
 
@@ -185,7 +200,11 @@ def add_idea(title: str, description: str) -> str:
             "--description", description
         ]
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
-        return f"✅ Idea added: **{title}**\nWait 48 hours before scoring." if result.returncode == 0 else f"⚠️ Failed: {result.stderr}"
+        return (
+            f"✅ Idea added: **{title}**\nWait 48 hours before scoring."
+            if result.returncode == 0
+            else f"⚠️ Failed: {result.stderr}"
+        )
     except Exception as e:
         return f"❌ Error: {e}"
 
@@ -200,7 +219,11 @@ def generate_review() -> str:
     try:
         cmd = [sys.executable, str(SCRIPTS_DIR / "saffin.py"), "review"]
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
-        return f"✅ Weekly review generated.\n{result.stdout}" if result.returncode == 0 else f"⚠️ Failed: {result.stderr}"
+        return (
+            f"✅ Weekly review generated.\n{result.stdout}"
+            if result.returncode == 0
+            else f"⚠️ Failed: {result.stderr}"
+        )
     except Exception as e:
         return f"❌ Error: {e}"
 
@@ -209,20 +232,23 @@ def check_reminders() -> str:
     """Check if reminders are due (Sunday = review day)."""
     today = date.today()
     day_name = today.strftime("%A")
-    
+
     reminders = []
     if day_name == "Sunday":
         reminders.append("📋 It's Sunday! Time for your weekly review.")
-    
+
     # Check if journal has entry today
     try:
         with open(JOURNAL_CSV, "r") as f:
             content = f.read()
             if str(today) not in content:
-                reminders.append("📝 You haven't logged today yet. Time to record your session!")
+                reminders.append(
+                    "📝 You haven't logged today yet. "
+                    "Time to record your session!"
+                )
     except:
         pass
-    
+
     if reminders:
         return "\n".join(reminders)
     else:
@@ -429,10 +455,10 @@ def execute_tool(tool_call: str) -> str:
     match = re.match(r"TOOL:\s*(\w+)\((.*)\)", tool_call.strip())
     if not match:
         return "❌ Invalid tool format"
-    
+
     tool_name = match.group(1).upper()
     args_str = match.group(2)
-    
+
     # Simple argument parser (handles quoted strings)
     args = []
     in_quotes = False
@@ -447,7 +473,7 @@ def execute_tool(tool_call: str) -> str:
         current_arg += char
     if current_arg.strip():
         args.append(current_arg.strip().strip('"'))
-    
+
     # Execute
     if tool_name == "LOG_SESSION" and len(args) >= 3:
         return log_session(int(args[0]), int(args[1]), args[2])
@@ -483,10 +509,17 @@ def execute_tool(tool_call: str) -> str:
 
                 results = rag.search_reviews(args[0], top_k=5)
                 if not results:
-                    return "🔎 No weekly reviews found. Add files under weekly_reviews/ and build the index with scripts/rag.py --build"
+                    return (
+                        "🔎 No weekly reviews found. Add files under "
+                        "weekly_reviews/ and build the index with "
+                        "scripts/rag.py --build"
+                    )
                 out_lines = []
                 for path, chunk, score in results:
-                    out_lines.append(f"{score:.3f} - {Path(path).name}: {chunk[:300].strip()}")
+                    out_lines.append(
+                        f"{score:.3f} - {Path(path).name}: "
+                        f"{chunk[:300].strip()}"
+                    )
                 return "\n\n".join(out_lines)
             except Exception as e:
                 return f"❌ RAG error: {e}"
@@ -502,21 +535,24 @@ def execute_tool(tool_call: str) -> str:
 def chat_loop():
     """Main conversation loop."""
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-    
+
     # Load history if exists
     history = load_chat_history()
     if history:
         messages = history
         print("\n📚 Loaded previous conversation.\n")
-    
+
     # Check reminders on startup
     print("🔍 Checking for reminders...")
     reminders = check_reminders()
     if "📋" in reminders or "📝" in reminders:
         print(f"\n{reminders}\n")
-    
-    print(f"💭 Saffin Assistant ({CONFIG.model}) ready.\nType 'clear', 'history', or 'exit' for commands.\n")
-    
+
+    print(
+        f"💭 Saffin Assistant ({CONFIG.model}) ready.\n"
+        "Type 'clear', 'history', or 'exit' for commands.\n"
+    )
+
     while True:
         try:
             user_input = input("You: ").strip()
@@ -524,10 +560,10 @@ def chat_loop():
             print("\n\nGoodbye! 👋")
             save_chat_history(messages)
             break
-        
+
         if not user_input:
             continue
-        
+
         # Commands
         if user_input.lower() == "exit":
             print("Goodbye! 👋")
@@ -544,7 +580,7 @@ def chat_loop():
                     print(f"  {i}. {msg['role'].upper()}: {msg['content'][:60]}...")
             print()
             continue
-        
+
         # Add user message
         messages.append({"role": "user", "content": user_input})
 
@@ -581,10 +617,10 @@ def cli_mode(args: List[str]):
     if not args:
         chat_loop()
         return
-    
+
     command = args[0].lower()
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-    
+
     if command == "log":
         # saffin.py assistant log 30 20 "notes here"
         if len(args) < 4:
@@ -592,18 +628,18 @@ def cli_mode(args: List[str]):
             return
         result = log_session(int(args[1]), int(args[2]), " ".join(args[3:]))
         print(result)
-    
+
     elif command == "status":
         result = get_week_progress()
         print(result)
-    
+
     elif command == "idea":
         if len(args) < 3:
             print("Usage: assistant idea <title> <description>")
             return
         result = add_idea(args[1], " ".join(args[2:]))
         print(result)
-    
+
     elif command == "reminders":
         result = check_reminders()
         print(result)
@@ -646,7 +682,7 @@ def cli_mode(args: List[str]):
                 print(f"{score:.3f} - {Path(path).name}\n{chunk}\n---\n")
         except Exception as e:
             print(f"RAG error: {e}")
-    
+
     elif command == "ask":
         # saffin.py assistant ask "Natural language query"
         query = " ".join(args[1:])
@@ -654,7 +690,7 @@ def cli_mode(args: List[str]):
         response = call_ollama(messages, stream=CONFIG.stream)
         if not CONFIG.stream:
             print(response)
-    
+
     else:
         print(f"Unknown command: {command}")
         print("Available: log, status, idea, reminders, ask, or leave blank for chat mode")
@@ -670,9 +706,18 @@ if __name__ == "__main__":
         description="Saffin Assistant — local AI for Saffin OS v2",
         add_help=False,
     )
-    parser.add_argument("--model", default=CONFIG.model, help=f"Ollama model (default: {CONFIG.model})")
-    parser.add_argument("--no-stream", action="store_true", help="Disable streaming output")
-    parser.add_argument("--host", default=CONFIG.host, help=f"Ollama host (default: {CONFIG.host})")
+    parser.add_argument(
+        "--model", default=CONFIG.model,
+        help=f"Ollama model (default: {CONFIG.model})"
+    )
+    parser.add_argument(
+        "--no-stream", action="store_true",
+        help="Disable streaming output"
+    )
+    parser.add_argument(
+        "--host", default=CONFIG.host,
+        help=f"Ollama host (default: {CONFIG.host})"
+    )
     parser.add_argument("-h", "--help", action="store_true")
 
     known, remaining = parser.parse_known_args()
