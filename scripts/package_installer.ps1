@@ -116,7 +116,7 @@ Run the installer by extracting the ZIP and running `scripts\start_saffin.ps1` o
 }
 
 # Ensure output directory exists
-$outDir = Split-Path -Parent (Resolve-Path $OutputPath)
+$outDir = Split-Path -Parent $OutputPath
 if (-not (Test-Path $outDir)) { New-Item -ItemType Directory -Path $outDir | Out-Null }
 
 Write-Host "Creating ZIP: $OutputPath"
