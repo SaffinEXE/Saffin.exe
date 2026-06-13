@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "saffin-os-v2"
+version = "0.1.0"
+description = "Saffin OS v2 — journaling, idea vault, weekly reviews automation"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = []
+authors = [ {name = "Saffin"} ]
+license = { text = "MIT" }
+
+[project.scripts]
+saffin = "scripts.saffin:main"
+decision-score = "scripts.decision_score:main"
+assistant = "scripts.assistant:chat"
+
+[tool.black]
+line-length = 88
+target-version = ["py38"]
+
+[tool.ruff]
+line-length = 88
+extend-select = ["E", "W", "F"]
+
+[tool.setuptools_scm]
+version_scheme = "guess-next-dev"
+local_scheme = "node-and-date"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

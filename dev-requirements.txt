@@ -1,0 +1,7 @@
+pre-commit
+ruff
+black
+isort
+setuptools_scm
+build
+twine
