@@ -1,0 +1,11 @@
+__pycache__/
+.pytest_cache/
+.venv/
+venv/
+*.pyc
+/.idea/
+/.vscode/
+# Saffin assistant
+.saffin_chat_history.json
+scripts/check_reminders.sh
+scripts/check_reminders.ps1
