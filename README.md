@@ -143,6 +143,8 @@ black --check .
 
 ## Local assistant (LLM + tools)
 
+📖 **Full guide:** [docs/ASSISTANT.md](docs/ASSISTANT.md)
+
 A starter assistant script is included at `scripts/assistant.py`. It uses a local LLM (Ollama) when available and falls back to a simple rule-based responder.
 
 Requirements:
