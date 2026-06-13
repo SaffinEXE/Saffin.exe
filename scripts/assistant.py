@@ -313,22 +313,28 @@ def streaks() -> str:
     """
     Human-readable streaks string. LLM-callable wrapper.
     """
-    s = calculate_streaks()
-    if s["total_days"] == 0:
-        return "📊 No sessions logged yet. Log your first one to start a streak!"
+    # Prefer using the standalone `scripts/streaks.py` module if available
+    try:
+        from scripts import streaks as _streaks
+        return _streaks.streaks_summary()
+    except Exception:
+        # Fallback to built-in calculation
+        s = calculate_streaks()
+        if s["total_days"] == 0:
+            return "📊 No sessions logged yet. Log your first one to start a streak!"
 
-    parts = [
-        f"🔥 Current streak: **{s['current_streak']} day(s)**",
-        f"🏆 Longest streak: **{s['longest_streak']} day(s)**",
-        f"📅 Total days logged: {s['total_days']}",
-        f"📝 Last logged: {s['last_logged']}",
-    ]
-    if s["is_on_streak"]:
-        parts.append("✅ You're logged in today — keep the streak alive!")
-    else:
-        parts.append("💡 Tip: log today to start a new streak.")
+        parts = [
+            f"🔥 Current streak: **{s['current_streak']} day(s)**",
+            f"🏆 Longest streak: **{s['longest_streak']} day(s)**",
+            f"📅 Total days logged: {s['total_days']}",
+            f"📝 Last logged: {s['last_logged']}",
+        ]
+        if s["is_on_streak"]:
+            parts.append("✅ You're logged in today — keep the streak alive!")
+        else:
+            parts.append("💡 Tip: log today to start a new streak.")
 
-    return "\n".join(parts)
+        return "\n".join(parts)
 
 # ============================================================================
 # TOOL DEFINITIONS FOR THE LLM
@@ -364,6 +370,14 @@ You have access to the following tools to help manage Saffin OS:
 7. **STREAKS()**
     - Returns current consecutive-day logging streak and the longest streak ever.
     - Use when the user asks "how's my streak?", "am I on a streak?", or wants motivation.
+
+9. **SET_STREAK_GOAL(days)**
+   - Set a target streak goal (e.g., 30 days).
+   - Use when user says "set my goal to 30 days" or "I want a 60-day streak".
+
+10. **STREAK_HEATMAP()**
+    - Show a visual calendar heatmap of logged days.
+    - Use when user asks "show my heatmap", "show my calendar", or wants a visual.
 
 8. **SEARCH_REVIEWS(query)**
     - Search past `weekly_reviews/*.md` for relevant passages and return the top matches.
@@ -449,6 +463,18 @@ def execute_tool(tool_call: str) -> str:
         return check_reminders()
     elif tool_name == "STREAKS":
         return streaks()
+    elif tool_name == "SET_STREAK_GOAL" and len(args) >= 1:
+        try:
+            from scripts import streaks as _streaks
+            return _streaks.set_streak_goal(int(args[0]))
+        except Exception as e:
+            return f"❌ Error setting goal: {e}"
+    elif tool_name == "STREAK_HEATMAP":
+        try:
+            from scripts import streaks as _streaks
+            return _streaks.generate_heatmap()
+        except Exception as e:
+            return f"❌ Error generating heatmap: {e}"
     elif tool_name == "SEARCH_REVIEWS":
         # Expect single string arg
         if len(args) >= 1:
@@ -584,6 +610,27 @@ def cli_mode(args: List[str]):
 
     elif command == "streaks":
         print(streaks())
+    elif command == "goal":
+        # assistant goal [days]
+        if len(args) < 2:
+            try:
+                from scripts import streaks as _streaks
+                goal = _streaks.get_streak_goal()
+                print(f"Current goal: {goal or 'not set'}")
+            except Exception as e:
+                print(f"Error: {e}")
+        else:
+            try:
+                from scripts import streaks as _streaks
+                print(_streaks.set_streak_goal(int(args[1])))
+            except Exception as e:
+                print(f"Error setting goal: {e}")
+    elif command == "heatmap":
+        try:
+            from scripts import streaks as _streaks
+            print(_streaks.generate_heatmap())
+        except Exception as e:
+            print(f"Error generating heatmap: {e}")
     elif command == "search_reviews":
         query = " ".join(args[1:]) if len(args) > 1 else None
         if not query:
